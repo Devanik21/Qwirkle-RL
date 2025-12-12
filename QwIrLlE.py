@@ -786,13 +786,13 @@ with st.sidebar.expander("1. Agent 1 Parameters", expanded=True):
     lr1 = st.slider("Learning Rate α₁", 0.01, 0.5, 0.1, 0.01)
     gamma1 = st.slider("Discount Factor γ₁", 0.8, 0.99, 0.95, 0.01)
     epsilon_decay1 = st.slider("Epsilon Decay₁", 0.99, 0.9999, 0.995, 0.0001, format="%.4f")
-    mcts_sims1 = st.slider("MCTS Simulations₁", 10, 200, 50, 10)
+    mcts_sims1 = st.slider("MCTS Simulations₁", 1, 200, 5, 1)
 
 with st.sidebar.expander("2. Agent 2 Parameters", expanded=True):
     lr2 = st.slider("Learning Rate α₂", 0.01, 0.5, 0.1, 0.01)
     gamma2 = st.slider("Discount Factor γ₂", 0.8, 0.99, 0.95, 0.01)
     epsilon_decay2 = st.slider("Epsilon Decay₂", 0.99, 0.9999, 0.995, 0.0001, format="%.4f")
-    mcts_sims2 = st.slider("MCTS Simulations₂", 10, 200, 50, 10)
+    mcts_sims2 = st.slider("MCTS Simulations₂", 1, 200, 5, 1)
 
 with st.sidebar.expander("3. Training Configuration", expanded=True):
     episodes = st.number_input("Training Episodes", 10, 10000, 100, 10)
