@@ -868,7 +868,7 @@ with st.sidebar.expander("4. Brain Storage 💾", expanded=False):
         brain_size = len(st.session_state.agent1.q_table) + len(st.session_state.agent2.q_table)
         
         if brain_size > 0:
-            st.success(f"🧠 Brain Scan: {brain_size} memories found.")
+            st.success(f" Brain Scan: {brain_size} memories found.")
             
             config = {
                 "lr1": lr1, "gamma1": gamma1, "epsilon_decay1": epsilon_decay1, "mcts_sims1": mcts_sims1, "depth1": depth1,
@@ -909,7 +909,7 @@ with st.sidebar.expander("4. Brain Storage 💾", expanded=False):
                     time.sleep(1)
                     st.rerun()
 
-train_button = st.sidebar.button("🚀 Begin Training Epochs", 
+train_button = st.sidebar.button(" Begin Training Epochs", 
                                  use_container_width=True, type="primary")
 
 if st.sidebar.button("🧹 Clear All & Reset", use_container_width=True):
