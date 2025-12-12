@@ -771,9 +771,19 @@ def deserialize_q_table(serialized_q):
         try:
             state_str, action_key = k_str.split('|', 1)
             state_list = json.loads(state_str)
-            state_tuple = tuple(state_list)
+            
+            # FIX: Convert inner lists back to tuples so they are hashable
+            state_data = []
+            for item in state_list:
+                if isinstance(item, list):
+                    state_data.append(tuple(item))
+                else:
+                    state_data.append(item)
+            
+            state_tuple = tuple(state_data)
             deserialized_q[(state_tuple, action_key)] = value
-        except:
+        except Exception as e:
+            # Optional: print(e) to see errors in console
             continue
     return deserialized_q
 
