@@ -410,19 +410,24 @@ class MCTSNode:
 # Strategic RL Agent with MCTS
 # ============================================================================
 
+# ============================================================================
+# Strategic RL Agent with MCTS & Minimax
+# ============================================================================
+
 class StrategicQwirkleAgent:
     def __init__(self, player_id, lr=0.1, gamma=0.95, epsilon=1.0,
-                 epsilon_decay=0.995, epsilon_min=0.05):
+                 epsilon_decay=0.995, epsilon_min=0.05, minimax_depth=0):
         self.player_id = player_id
         self.lr = lr
         self.gamma = gamma
         self.epsilon = epsilon
         self.epsilon_decay = epsilon_decay
         self.epsilon_min = epsilon_min
+        self.minimax_depth = minimax_depth  # New parameter for depth control
         
         self.q_table = {}
         self.experience_replay = deque(maxlen=10000)
-        self.mcts_simulations = 50  # MCTS iterations per move
+        self.mcts_simulations = 50 
         
         # Stats
         self.wins = 0
@@ -440,17 +445,72 @@ class StrategicQwirkleAgent:
         if not available_actions:
             return None
         
-        # Level 1: Epsilon-greedy exploration
+        # STRATEGY 1: Minimax (If depth > 0, we prioritize this)
+        if self.minimax_depth > 0:
+            # We use a limited depth search. 
+            # Note: Qwirkle has a high branching factor, so we limit actions checked for speed.
+            _, best_action = self._minimax_alpha_beta(
+                env, 
+                depth=self.minimax_depth, 
+                alpha=-float('inf'), 
+                beta=float('inf'), 
+                maximizing_player=True
+            )
+            return best_action if best_action else random.choice(available_actions)
+
+        # STRATEGY 2: Epsilon-greedy exploration (Standard RL)
         if training and random.random() < self.epsilon:
             return random.choice(available_actions)
         
-        # Level 2: MCTS strategic planning
+        # STRATEGY 3: MCTS strategic planning
         best_action = self._mcts_search(env, available_actions)
         
         return best_action
+
+    def _minimax_alpha_beta(self, env, depth, alpha, beta, maximizing_player):
+        """
+        Recursive Minimax with Alpha-Beta Pruning.
+        Checks future moves to find the optimal play.
+        """
+        if depth == 0 or env.game_over:
+            # Evaluate the board from the perspective of the agent who owns this class
+            return env.evaluate_position(self.player_id), None
+
+        # Optimization: Only check top 8 moves to prevent Streamlit from timing out
+        actions = env.get_available_actions()[:8] 
+        best_action = random.choice(actions) if actions else None
+
+        if maximizing_player:
+            max_eval = -float('inf')
+            for action in actions:
+                sim_env = self._copy_env(env)
+                sim_env.make_move(action)
+                eval_val, _ = self._minimax_alpha_beta(sim_env, depth - 1, alpha, beta, False)
+                
+                if eval_val > max_eval:
+                    max_eval = eval_val
+                    best_action = action
+                alpha = max(alpha, eval_val)
+                if beta <= alpha:
+                    break # Beta cutoff
+            return max_eval, best_action
+        else:
+            min_eval = float('inf')
+            for action in actions:
+                sim_env = self._copy_env(env)
+                sim_env.make_move(action)
+                eval_val, _ = self._minimax_alpha_beta(sim_env, depth - 1, alpha, beta, True)
+                
+                if eval_val < min_eval:
+                    min_eval = eval_val
+                    best_action = action
+                beta = min(beta, eval_val)
+                if beta <= alpha:
+                    break # Alpha cutoff
+            return min_eval, best_action
     
     def _mcts_search(self, env, actions):
-        """Monte Carlo Tree Search"""
+        """Monte Carlo Tree Search (Unchanged)"""
         root = MCTSNode(env.get_state())
         root.untried_actions = actions[:]
         
@@ -482,12 +542,10 @@ class StrategicQwirkleAgent:
                 node.value += reward
                 node = node.parent
         
-        # Return most visited action
         if root.children:
             best_child = root.most_visited_child()
             return best_child.action
         
-        # Fallback: best Q-value
         best_score = -float('inf')
         best_action = actions[0]
         for action in actions:
@@ -495,11 +553,10 @@ class StrategicQwirkleAgent:
             if q_value > best_score:
                 best_score = q_value
                 best_action = action
-        
         return best_action
     
     def _simulate_random_playout(self, env):
-        """Simulate game to end with random moves"""
+        """Simulate game to end with random moves (Unchanged)"""
         discount = 1.0
         total_reward = 0
         max_steps = 30
@@ -515,7 +572,6 @@ class StrategicQwirkleAgent:
             discount *= 0.95
             steps += 1
         
-        # Add final score differential
         if env.game_over and env.winner == self.player_id:
             total_reward += 100
         elif env.game_over:
@@ -524,7 +580,7 @@ class StrategicQwirkleAgent:
         return total_reward
     
     def _copy_env(self, env):
-        """Create a lightweight copy of environment"""
+        """Create a lightweight copy of environment (Unchanged)"""
         new_env = Qwirkle(env.num_players)
         new_env.board = env.board.copy()
         new_env.hands = [hand[:] for hand in env.hands]
@@ -537,6 +593,7 @@ class StrategicQwirkleAgent:
         return new_env
     
     def update_q_value(self, state, action, reward, next_state, next_available_actions):
+        """Q-Learning update (Unchanged)"""
         action_key = str(action)
         current_q = self.get_q_value(state, action)
         
@@ -780,6 +837,10 @@ def load_agents_from_zip(uploaded_file):
 # Streamlit UI
 # ============================================================================
 
+# ============================================================================
+# Streamlit UI
+# ============================================================================
+
 st.sidebar.header("⚙️ Simulation Controls")
 
 with st.sidebar.expander("1. Agent 1 Parameters", expanded=True):
@@ -787,12 +848,16 @@ with st.sidebar.expander("1. Agent 1 Parameters", expanded=True):
     gamma1 = st.slider("Discount Factor γ₁", 0.8, 0.99, 0.95, 0.01)
     epsilon_decay1 = st.slider("Epsilon Decay₁", 0.99, 0.9999, 0.995, 0.0001, format="%.4f")
     mcts_sims1 = st.slider("MCTS Simulations₁", 1, 200, 5, 1)
+    # NEW: Minimax Control
+    depth1 = st.slider("Minimax Depth₁ (0=MCTS)", 0, 3, 0, help="If > 0, overrides MCTS with Minimax search.")
 
 with st.sidebar.expander("2. Agent 2 Parameters", expanded=True):
     lr2 = st.slider("Learning Rate α₂", 0.01, 0.5, 0.1, 0.01)
     gamma2 = st.slider("Discount Factor γ₂", 0.8, 0.99, 0.95, 0.01)
     epsilon_decay2 = st.slider("Epsilon Decay₂", 0.99, 0.9999, 0.995, 0.0001, format="%.4f")
     mcts_sims2 = st.slider("MCTS Simulations₂", 1, 200, 5, 1)
+    # NEW: Minimax Control
+    depth2 = st.slider("Minimax Depth₂ (0=MCTS)", 0, 3, 0, help="If > 0, overrides MCTS with Minimax search.")
 
 with st.sidebar.expander("3. Training Configuration", expanded=True):
     episodes = st.number_input("Training Episodes", 10, 10000, 100, 10)
@@ -806,8 +871,8 @@ with st.sidebar.expander("4. Brain Storage 💾", expanded=False):
             st.success(f"🧠 Brain Scan: {brain_size} memories found.")
             
             config = {
-                "lr1": lr1, "gamma1": gamma1, "epsilon_decay1": epsilon_decay1, "mcts_sims1": mcts_sims1,
-                "lr2": lr2, "gamma2": gamma2, "epsilon_decay2": epsilon_decay2, "mcts_sims2": mcts_sims2,
+                "lr1": lr1, "gamma1": gamma1, "epsilon_decay1": epsilon_decay1, "mcts_sims1": mcts_sims1, "depth1": depth1,
+                "lr2": lr2, "gamma2": gamma2, "epsilon_decay2": epsilon_decay2, "mcts_sims2": mcts_sims2, "depth2": depth2,
                 "training_history": st.session_state.get('training_history', None)
             }
             
@@ -862,18 +927,21 @@ if 'env' not in st.session_state:
     st.session_state.env = Qwirkle()
 
 if 'agent1' not in st.session_state:
-    st.session_state.agent1 = StrategicQwirkleAgent(0, lr1, gamma1, epsilon_decay=epsilon_decay1)
+    # Initialize with new depth parameter
+    st.session_state.agent1 = StrategicQwirkleAgent(0, lr1, gamma1, epsilon_decay=epsilon_decay1, minimax_depth=depth1)
     st.session_state.agent1.mcts_simulations = mcts_sims1
-    st.session_state.agent2 = StrategicQwirkleAgent(1, lr2, gamma2, epsilon_decay=epsilon_decay2)
+    st.session_state.agent2 = StrategicQwirkleAgent(1, lr2, gamma2, epsilon_decay=epsilon_decay2, minimax_depth=depth2)
     st.session_state.agent2.mcts_simulations = mcts_sims2
 
 agent1 = st.session_state.agent1
 agent2 = st.session_state.agent2
 env = st.session_state.env
 
+# Update parameters dynamically if sliders change
 agent1.mcts_simulations = mcts_sims1
+agent1.minimax_depth = depth1
 agent2.mcts_simulations = mcts_sims2
-
+agent2.minimax_depth = depth2
 # ============================================================================
 # Display Current Stats
 # ============================================================================
