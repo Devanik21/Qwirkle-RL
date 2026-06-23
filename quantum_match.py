@@ -878,7 +878,7 @@ with st.sidebar.expander("2. Agent 2 (Blue) Parameters", expanded=True):
     mm2 = st.slider("Minimax Depth₂", 1, 12, 1, 1)
 
 with st.sidebar.expander("3. Training Configuration", expanded=True):
-    episodes = st.number_input("Training Episodes", 10, 50000, 50, 50)
+    episodes = st.number_input("Training Episodes", 10, 50000, 500, 50)
     update_freq = st.number_input("Update Every N Games", 1, 500, 25, 5)
     show_live = st.checkbox("Show Live Board During Training", False)
 
