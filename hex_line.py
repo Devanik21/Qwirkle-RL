@@ -779,15 +779,15 @@ st.sidebar.header("⚙️ Hex-Line Controls")
 with st.sidebar.expander("1. Agent 1 (Red) Parameters", expanded=True):
     lr1 = st.slider("Learning Rate α₁", 0.05, 1.0, 0.25, 0.05)
     gamma1 = st.slider("Discount γ₁", 0.80, 0.99, 0.97, 0.01)
-    mcts1 = st.slider("MCTS Simulations₁", 10, 600, 200, 10)
-    mm_depth1 = st.slider("Minimax Depth₁", 1, 10, 6, 1)
+    mcts1 = st.slider("MCTS Simulations₁", 10, 600, 50, 10)
+    mm_depth1 = st.slider("Minimax Depth₁", 1, 10, 3, 1)
     temp1 = st.slider("Temperature₁", 0.0, 2.0, 1.0, 0.1)
 
 with st.sidebar.expander("2. Agent 2 (Blue) Parameters", expanded=True):
     lr2 = st.slider("Learning Rate α₂", 0.05, 1.0, 0.25, 0.05)
     gamma2 = st.slider("Discount γ₂", 0.80, 0.99, 0.97, 0.01)
-    mcts2 = st.slider("MCTS Simulations₂", 10, 600, 150, 10)
-    mm_depth2 = st.slider("Minimax Depth₂", 1, 10, 5, 1)
+    mcts2 = st.slider("MCTS Simulations₂", 10, 600, 50, 10)
+    mm_depth2 = st.slider("Minimax Depth₂", 1, 10, 3, 1)
     temp2 = st.slider("Temperature₂", 0.0, 2.0, 1.0, 0.1)
 
 with st.sidebar.expander("3. Training Configuration", expanded=True):
