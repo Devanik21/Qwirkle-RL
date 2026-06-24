@@ -1,5 +1,4 @@
 import streamlit as st
-import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from collections import defaultdict
@@ -11,7 +10,7 @@ import math
 import time
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import List, Tuple, Optional, Dict, Set
+from typing import List, Tuple, Optional, Dict
 import pandas as pd
 
 # ============================================================================
@@ -128,7 +127,7 @@ class QuantumMatchGame:
             return []
         actions = []
         p = self.current_player
-        opp = 3 - p
+        opp_color = 3 - p
 
         # PLACE: from pool onto empty squares
         if self.pool > 0:
@@ -138,11 +137,9 @@ class QuantumMatchGame:
 
         # FLIP: flip opponent's token
         for pos in range(4):
-            if self.board[pos] == opp:
+            if self.board[pos] == opp_color:
                 actions.append(QAction(FLIP, pos, p))
 
-        # Edge case: if no actions possible (shouldn't happen with proper rules),
-        # allow pass as flip of self (invalid but safe fallback)
         return actions
 
     def make_action(self, action: QAction) -> Tuple[tuple, float, bool]:
@@ -276,7 +273,6 @@ class QuantumMatchGame:
         """Label each legal action with a quality hint."""
         labels = {}
         p = self.current_player
-        opp = 3 - p
         owned = self.count_owned(p)
 
         for action in self.get_valid_actions():
@@ -504,12 +500,7 @@ class QuantumAgent:
                 self.total_moves += 1
                 return act
 
-        # Block opponent win
-        opp = 3 - self.player_id
-        for act in actions:
-            # Check if opponent can win after we make this move
-            pass  # Handled in negamax
-
+        # Block opponent win — handled by negamax depth search
         if training and random.random() < self.epsilon:
             self.total_moves += 1
             return random.choice(actions)
@@ -672,7 +663,6 @@ def draw_qm_board(board: List[int], pool: int, title: str = "Quantum Match",
         # Token
         if cell_val != 0:
             color = token_colors[cell_val]
-            side_label = "W" if cell_val == 1 else "B"  # Cosmetic: White/Black sides
             circle = plt.Circle((col * 2.2 + 1.0, row * 2.2 + 1.15), 0.6,
                                   color=color, ec='#ffffff', linewidth=2, zorder=3)
             ax.add_patch(circle)
@@ -720,7 +710,7 @@ def draw_action_history_chart(move_history: List[QAction]) -> plt.Figure:
     ax.set_facecolor('#1a1a2e')
 
     for spine in ax.spines.values():
-        ax.spines[spine.axis_name].set_edgecolor('#334455')
+        spine.set_edgecolor('#334455')
     ax.tick_params(colors='#AAAACC')
 
     turns = list(range(1, len(move_history) + 1))
@@ -868,14 +858,14 @@ st.sidebar.header("⚙️ Quantum Match Controls")
 with st.sidebar.expander("1. Agent 1 (Red) Parameters", expanded=True):
     lr1 = st.slider("Learning Rate α₁", 0.05, 1.0, 0.25, 0.05)
     gamma1 = st.slider("Discount γ₁", 0.80, 0.99, 0.97, 0.01)
-    mcts1 = st.slider("MCTS Simulations₁", 10, 800, 20, 10)
-    mm1 = st.slider("Minimax Depth₁", 1, 12, 1, 1)
+    mcts1 = st.slider("MCTS Simulations₁", 10, 800, 200, 10)
+    mm1 = st.slider("Minimax Depth₁", 1, 12, 8, 1)
 
 with st.sidebar.expander("2. Agent 2 (Blue) Parameters", expanded=True):
     lr2 = st.slider("Learning Rate α₂", 0.05, 1.0, 0.25, 0.05)
     gamma2 = st.slider("Discount γ₂", 0.80, 0.99, 0.97, 0.01)
-    mcts2 = st.slider("MCTS Simulations₂", 10, 800, 20, 10)
-    mm2 = st.slider("Minimax Depth₂", 1, 12, 1, 1)
+    mcts2 = st.slider("MCTS Simulations₂", 10, 800, 150, 10)
+    mm2 = st.slider("Minimax Depth₂", 1, 12, 7, 1)
 
 with st.sidebar.expander("3. Training Configuration", expanded=True):
     episodes = st.number_input("Training Episodes", 10, 50000, 500, 50)
@@ -1321,4 +1311,3 @@ After your turn, if **all 4 squares** show your color — you win immediately.
 ### AI Architecture
 MCTS (planning with PUCT), Negamax with alpha-beta and move ordering, Q-learning table, and a policy table distilled from tree search. Flip/place trade-off analysis is built into both the heuristic evaluator (flip threats, board saturation, mobility) and the prior generation (win detection, opponent blocking, positional value).
 """)
-
