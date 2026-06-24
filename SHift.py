@@ -1089,19 +1089,19 @@ st.sidebar.header("⚙️ Shift-3 Controls")
 with st.sidebar.expander("1. Agent 1 (Red) Parameters", expanded=True):
     lr1 = st.slider("Learning Rate α₁", 0.05, 1.0, 0.25, 0.05)
     gamma1 = st.slider("Discount γ₁", 0.80, 0.99, 0.97, 0.01)
-    mcts1 = st.slider("MCTS Simulations₁", 10, 800, 300, 10)
-    mm1 = st.slider("Minimax Depth₁", 1, 14, 8, 1)
+    mcts1 = st.slider("MCTS Simulations₁", 10, 800, 20, 10)
+    mm1 = st.slider("Minimax Depth₁", 1, 14, 2, 1)
     temp1 = st.slider("Temperature₁", 0.0, 2.0, 1.0, 0.1)
 
 with st.sidebar.expander("2. Agent 2 (Blue) Parameters", expanded=True):
     lr2 = st.slider("Learning Rate α₂", 0.05, 1.0, 0.25, 0.05)
     gamma2 = st.slider("Discount γ₂", 0.80, 0.99, 0.97, 0.01)
-    mcts2 = st.slider("MCTS Simulations₂", 10, 800, 200, 10)
-    mm2 = st.slider("Minimax Depth₂", 1, 14, 7, 1)
+    mcts2 = st.slider("MCTS Simulations₂", 10, 800, 20, 10)
+    mm2 = st.slider("Minimax Depth₂", 1, 14, 2, 1)
     temp2 = st.slider("Temperature₂", 0.0, 2.0, 1.0, 0.1)
 
 with st.sidebar.expander("3. Training Configuration", expanded=True):
-    episodes = st.number_input("Training Episodes", 10, 50000, 500, 50)
+    episodes = st.number_input("Training Episodes", 10, 5000000000, 500, 50)
     update_freq = st.number_input("Update Every N Games", 1, 500, 25, 5)
     show_live = st.checkbox("Show Live Board During Training", False)
 
