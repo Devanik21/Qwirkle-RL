@@ -1,12 +1,12 @@
 #  Qwirkle RL Arena
 
-<img width="2000" height="1500" alt="15365" src="https://github.com/user-attachments/assets/797c22af-ab62-44ec-9334-bfd9d5a58ee9" />
-
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![RL](https://img.shields.io/badge/RL-MCTS%20%2B%20Minimax%20%2B%20Q--Learning-green.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
+
+<img width="2000" height="1500" alt="15365" src="https://github.com/user-attachments/assets/797c22af-ab62-44ec-9334-bfd9d5a58ee9" />
 
 
 > **Combinatorial game mastery through hybrid planning: MCTS, minimax, and Q-learning converge on optimal tile placement.**
