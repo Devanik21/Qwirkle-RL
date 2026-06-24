@@ -11,7 +11,7 @@ import math
 import time
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import List, Tuple, Optional, Dict, Set
+from typing import List, Tuple, Optional, Dict
 import pandas as pd
 
 # ============================================================================
@@ -643,25 +643,33 @@ class Shift3Agent:
                 self.total_moves += 1
                 return act
 
-        # Block opponent immediate win
+        # Block opponent immediate win: check if opponent currently has any winning reply,
+        # then find an action that eliminates all such threats.
         opp = 3 - self.player_id
-        opp_game = game.copy()
-        opp_game.current_player = opp
-        for opp_act in opp_game.get_valid_actions():
-            s = opp_game.copy()
+        # Check whether opponent can win from current position on their next move
+        opp_can_win_now = False
+        opp_check = game.copy()
+        opp_check.current_player = opp
+        for opp_act in opp_check.get_valid_actions():
+            s = opp_check.copy()
             s.make_action(opp_act)
             if s.winner == opp:
-                # Try to find a blocking action
-                for block_act in actions:
-                    sim = game.copy()
-                    sim.make_action(block_act)
-                    # After my move, opponent can't win immediately?
-                    opp2 = sim.copy()
-                    opp2.current_player = opp
-                    can_win = any(True for a in opp2.get_valid_actions()
-                                  if opp2.copy().make_action(a)[0] and opp2.copy().make_action(a)
-                                  and Shift3Game().winner == opp)
-                    break
+                opp_can_win_now = True
+                break
+        if opp_can_win_now:
+            for block_act in actions:
+                sim = game.copy()
+                sim.make_action(block_act)
+                opp_still_wins = False
+                for opp_act2 in sim.get_valid_actions():
+                    s2 = sim.copy()
+                    s2.make_action(opp_act2)
+                    if s2.winner == opp:
+                        opp_still_wins = True
+                        break
+                if not opp_still_wins:
+                    self.total_moves += 1
+                    return block_act
 
         if training and random.random() < self.epsilon:
             self.total_moves += 1
@@ -895,8 +903,6 @@ def draw_board_heatmap(game: Shift3Game, player: int) -> plt.Figure:
         for pos in range(game.BOARD_SIZE):
             if game.board[pos] == 0:
                 sim = game.copy()
-                fake_act = S3Action(PLACE_ACTION, pos, 0, game.current_player)
-                # Eval board if we place here
                 sim.board[pos] = p
                 s = sim.evaluate_position(p)
                 sim.board[pos] = 0
@@ -905,8 +911,8 @@ def draw_board_heatmap(game: Shift3Game, player: int) -> plt.Figure:
                 scores.append(0)
 
         arr = np.array(scores).reshape(1, -1)
-        im = ax.imshow(arr, cmap='RdYlGn', aspect='auto',
-                       vmin=min(scores) - 1, vmax=max(scores) + 1)
+        ax.imshow(arr, cmap='RdYlGn', aspect='auto',
+                  vmin=min(scores) - 1, vmax=max(scores) + 1)
         for i, s in enumerate(scores):
             ax.text(i, 0, f"{s:.0f}", ha='center', va='center',
                     fontsize=9, color='black', fontweight='bold')
